@@ -6,7 +6,6 @@ from .models import Question
 from .serializers import QuestionSerializer
 
 from django.http import Http404
-from django.shortcuts import get_list_or_404
 
 import random
 
@@ -19,88 +18,69 @@ class ProblemSearchView(APIView):
                 count = int(request.query_params.get("count"))
                 category = request.query_params.get("category")
                 score = int(request.query_params.get("score"))
-            except (ValueError, TypeError) as e:
+            except ValueError:
                 return Response(
-                    {"error": "Invalid input parameters"},
+                    {
+                        "error": "Invalid count or score. Please provide valid numeric values."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except TypeError:
+                return Response(
+                    {
+                        "error": "Missing or invalid query parameters. Please provide count, category, and score."
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            problems = []
+            # Fetch questions based on the given difficulty score and category
+            problems = Question.objects.filter(
+                category=category, difficulty_score=score
+            )
+
             if count == 1:
                 try:
-                    # Fetch all questions with the given difficulty score
-                    problems = get_list_or_404(
-                        Question, category=category, difficulty_score=score
-                    )
-
-                    # Randomly choose one question from the list
-                    selected_problem = random.choice(problems)
-                    problems = [selected_problem]
+                    # Try to get a random question from the filtered queryset
+                    selected_problem = problems.order_by("?").first()
+                    if selected_problem is None:
+                        raise Http404(
+                            "No question found with the specified difficulty score"
+                        )
                 except Http404:
                     tolerance = 1
-                    while True:
-                        try:
-                            # Try to find a question with score + tolerance or score - tolerance
-                            problem = get_list_or_404(
-                                Question,
-                                category=category,
-                                difficulty_score__in=[
-                                    score + tolerance,
-                                    score - tolerance,
-                                ],
-                            )
-                            selected_problem = random.choice(problems)
-                            problems = [selected_problem]
-                        except Http404:
-                            pass  # Continue the loop if a question is not found
+                    while selected_problem is None:
+                        # Try to find a question with score + tolerance or score - tolerance
+                        problems = Question.objects.filter(
+                            category=category,
+                            difficulty_score__in=[score + tolerance, score - tolerance],
+                        )
+                        selected_problem = problems.order_by("?").first()
                         tolerance += 1
-                        if len(problems) >= 1:
-                            break  # Exit the loop if at least one question is found
                 serializer = QuestionSerializer(selected_problem)
                 return Response(serializer.data)
             else:
-                # Fetch all questions with the given difficulty score
-                problems = get_list_or_404(
-                    Question, category=category, difficulty_score=score
-                )
-
                 # Fetch additional problems with harder scores
                 tolerance = 1
-                remaining = count - len(problems)
-                while len(problems) < remaining // 2:
-                    try:
-                        # Fetch questions with score + tolerance
-                        additional_problems = get_list_or_404(
-                            Question,
-                            category=category,
-                            difficulty_score=score + tolerance,
-                        )
-
-                        # Add the fetched questions to the list
-                        problems.extend(additional_problems)
-                    except Http404:
-                        pass  # Continue the loop if a question is not found
+                remaining = count - problems.count()
+                while problems.count() < remaining // 2:
+                    additional_problems = Question.objects.filter(
+                        category=category, difficulty_score=score + tolerance
+                    )
+                    problems = problems.union(additional_problems)
                     tolerance += 1
 
                 # Fetch additional problems with easier scores
                 tolerance = 1
-                while len(problems) < count:
-                    try:
-                        # Fetch questions with score - tolerance
-                        additional_problems = get_list_or_404(
-                            Question,
-                            category=category,
-                            difficulty_score=score - tolerance,
-                        )
-
-                        # Add the fetched questions to the list
-                        problems.extend(additional_problems)
-                    except Http404:
-                        pass  # Continue the loop if a question is not found
+                while problems.count() < count:
+                    additional_problems = Question.objects.filter(
+                        category=category, difficulty_score=score - tolerance
+                    )
+                    problems = problems.union(additional_problems)
                     tolerance += 1
         except Exception as e:
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": f"Internal server error: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         serializer = QuestionSerializer(problems, many=True)
         return Response(serializer.data)
