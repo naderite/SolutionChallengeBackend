@@ -10,19 +10,19 @@ This API provides endpoints to search for problems based on specific criteria, s
 
 Fetch problems based on specified parameters.
 
-#### Parameters:
+#### Parameters
 
 - `count` (integer): Number of problems to fetch.
 - `category` (string): Problem category.
 - `score` (integer): Difficulty score.
 
-#### Example Request:
+#### Example Request
 
 ```http
 GET /api/problem-search/?count=1&category=Sample&score=3
 ```
 
-#### Example Response:
+#### Example Response
 
 ```json
 {
@@ -55,7 +55,15 @@ To get started, follow these steps:
    pip install -r requirements.txt
    ```
 
-4. Run the development server:
+4. Configure Django to accept requests from your Flutter app:
+
+Update the ALLOWED_HOSTS setting in your Django project's settings.py file to include the IP address or domain of your Flutter app. For example:
+
+   ```python
+   ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'your-flutter-app-ip-or-domain']
+   ```
+
+5. Run the development server:
 
    ```bash
    python manage.py runserver

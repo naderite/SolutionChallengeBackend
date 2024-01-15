@@ -1,5 +1,5 @@
 # Ignore SQLite database
-*.sqlite3
+
 
 # Ignore CSV data files
 *.csv
@@ -27,6 +27,5 @@ __pycache__/
 *.log
 
 # Ignore generated files
-db.sqlite3
 traindata.csv
 MathQA
