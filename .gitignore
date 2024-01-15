@@ -1,0 +1,32 @@
+# Ignore SQLite database
+*.sqlite3
+
+# Ignore CSV data files
+*.csv
+
+# Ignore Django migrations
+**/migrations/
+
+# Ignore MathQA directory
+MathQA/
+
+# Ignore Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+
+# Ignore environment-specific settings
+.env
+
+# Ignore log files
+*.log
+
+# Ignore generated files
+db.sqlite3
+traindata.csv
+MathQA
