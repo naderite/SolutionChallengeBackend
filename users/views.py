@@ -26,10 +26,10 @@ class UserScoresAPIView(APIView):
         if not user_id:
             return Response(ERROR_MISSING_USER_ID, status=status.HTTP_400_BAD_REQUEST)
 
-        user_math_scores = self.get_user_scores(user_id)
-        if user_math_scores:
+        user_scores = self.get_user_scores(user_id)
+        if user_scores:
             category = request.query_params.get("category")
-            return self.get_category_score_response(user_math_scores, category)
+            return self.get_category_score_response(user_scores, category)
         else:
             return Response(ERROR_USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
@@ -43,8 +43,8 @@ class UserScoresAPIView(APIView):
         except UserScores.DoesNotExist:
             return None
 
-    def get_category_score_response(self, user_math_scores, category):
-        serializer = UserScoresSerializer(user_math_scores)
+    def get_category_score_response(self, user_scores, category):
+        serializer = UserScoresSerializer(user_scores)
         scores_data = serializer.data
 
         if category and category in scores_data:
@@ -78,10 +78,10 @@ class UserScoresUpdateAPIView(APIView):
                 ERROR_INVALID_REQUEST_DATA, status=status.HTTP_400_BAD_REQUEST
             )
 
-        user_math_scores = self.get_user_scores(user_id)
-        if user_math_scores:
+        user_scores = self.get_user_scores(user_id)
+        if user_scores:
             return self.update_category_score(
-                user_math_scores, category, correct_questions, average_difficulty
+                user_scores, category, correct_questions, average_difficulty
             )
         else:
             return Response(ERROR_USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
@@ -95,15 +95,15 @@ class UserScoresUpdateAPIView(APIView):
         )
 
     def update_category_score(
-        self, user_math_scores, category, correct_questions, average_difficulty
+        self, user_scores, category, correct_questions, average_difficulty
     ):
         if category in VALID_CATEGORIES:
-            current_score = getattr(user_math_scores, category)
+            current_score = getattr(user_scores, category)
             new_score = self.calculate_new_score(
                 current_score, correct_questions, average_difficulty
             )
-            setattr(user_math_scores, category, new_score)
-            user_math_scores.save()
+            setattr(user_scores, category, new_score)
+            user_scores.save()
             return Response(
                 {"message": f"Category {category} updated successfully."},
                 status=status.HTTP_200_OK,
