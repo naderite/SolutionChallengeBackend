@@ -12,12 +12,20 @@ import random
 
 class ProblemSearchView(APIView):
     def get(self, request):
+        print("Try Melowel")
         try:
+            print("Try thenya")
             # Validate and parse input parameters
+            
             try:
+                print("Try in views1")
                 count = int(request.query_params.get("count"))
-                category = request.query_params.get("category")
+                category1 = request.query_params.get("category")
                 score = int(request.query_params.get("score"))
+                print("Affecta")
+                print(count)
+                print(category1)
+                print(score)
             except ValueError:
                 return Response(
                     {
@@ -35,9 +43,10 @@ class ProblemSearchView(APIView):
 
             # Fetch questions based on the given difficulty score and category
             problems = Question.objects.filter(
-                category=category, difficulty_score=score
+                category=category1, difficulty_score=score
             )
-
+            print(problems.query)
+            print(Question.objects.all())
             if count == 1:
                 try:
                     # Try to get a random question from the filtered queryset
@@ -51,7 +60,7 @@ class ProblemSearchView(APIView):
                     while selected_problem is None:
                         # Try to find a question with score + tolerance or score - tolerance
                         problems = Question.objects.filter(
-                            category=category,
+                            category=category1,
                             difficulty_score__in=[score + tolerance, score - tolerance],
                         )
                         selected_problem = problems.order_by("?").first()
@@ -64,7 +73,7 @@ class ProblemSearchView(APIView):
                 remaining = count - problems.count()
                 while problems.count() < remaining // 2:
                     additional_problems = Question.objects.filter(
-                        category=category, difficulty_score=score + tolerance
+                        category=category1, difficulty_score=score + tolerance
                     )
                     problems = problems.union(additional_problems)
                     tolerance += 1
@@ -73,7 +82,7 @@ class ProblemSearchView(APIView):
                 tolerance = 1
                 while problems.count() < count:
                     additional_problems = Question.objects.filter(
-                        category=category, difficulty_score=score - tolerance
+                        category=category1, difficulty_score=score - tolerance
                     )
                     problems = problems.union(additional_problems)
                     tolerance += 1
