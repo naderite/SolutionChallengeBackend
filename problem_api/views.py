@@ -45,8 +45,6 @@ class ProblemSearchView(APIView):
             problems = Question.objects.filter(
                 category=category1, difficulty_score=score
             )
-            print(problems.query)
-            print(Question.objects.all())
             if count == 1:
                 try:
                     # Try to get a random question from the filtered queryset
