@@ -11,6 +11,7 @@ from .constants import VALID_CATEGORIES
 
 class ProblemSearchView(APIView):
     def get(self, request):
+        print("Try Melowel")
         try:
             count, category, score, history = BackendLogic.validate_params(request)
 
