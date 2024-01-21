@@ -43,6 +43,7 @@ Fetch problems based on specified parameters.
 - `count` (integer): Number of problems to fetch.
 - `category` (string): Problem category.
 - `score` (integer): Difficulty score.
+- `history` (integer): number of user total questions in that category.
 
 ##### Example Request
 

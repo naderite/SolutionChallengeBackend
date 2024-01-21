@@ -56,38 +56,72 @@ class BackendLogic:
 
     @staticmethod
     def get_multiple_problems(problems, count, category, score):
-        selected_problems = problems.order_by("?")[:count]
-        remaining = count - selected_problems.count()
-        selected_problems = BackendLogic.fetch_additional_problems(
-            selected_problems, category, score, remaining // 2, 1, +1
-        )
-        selected_problems = BackendLogic.fetch_additional_problems(
-            selected_problems, category, score, remaining, 1, -1
-        )
+        selected_problems = Question.objects.none()
+
+        if problems.exists():
+            all_problem_ids = list(problems.values_list("id", flat=True))
+
+            if problems.count() > 5:
+                selected_problem_ids = random.sample(
+                    all_problem_ids, min(count, len(all_problem_ids))
+                )
+
+                selected_problems = Question.objects.filter(id__in=selected_problem_ids)
+            else:
+                selected_problems = Question.objects.filter(id__in=all_problem_ids)
+                remaining = count - selected_problems.count()
+                selected_problems = BackendLogic.fetch_additional_problems(
+                    selected_problems, category, score, remaining // 2, 1, +1
+                )
+                selected_problems = BackendLogic.fetch_additional_problems(
+                    selected_problems, category, score, remaining // 2, 1, -1
+                )
+        else:
+            selected_problems = BackendLogic.fetch_additional_problems(
+                selected_problems, category, score, count // 2, 1, +1
+            )
+            selected_problems = BackendLogic.fetch_additional_problems(
+                selected_problems, category, score, count, 1, -1
+            )
+
         return selected_problems
 
     @staticmethod
     def fetch_additional_problems(
         selected_problems, category, score, target_count, tolerance, direction
     ):
-        while selected_problems.count() < target_count:
-            additional_problems = Question.objects.filter(
-                category=category, difficulty_score=score + direction * tolerance
+        additional_problems = Question.objects.filter(
+            category=category, difficulty_score=score + direction * tolerance
+        )
+
+        tolerance += 1
+
+        while additional_problems.count() < target_count:
+            additional_problems = additional_problems.union(
+                Question.objects.filter(
+                    category=category, difficulty_score=score + direction * tolerance
+                )
             )
-            selected_problems = selected_problems.union(additional_problems)
             tolerance += 1
+
+        selected_problems_ids = list(additional_problems.values_list("id", flat=True))[
+            :target_count
+        ]
+
+        selected_problems = selected_problems.union(
+            Question.objects.filter(id__in=selected_problems_ids)
+        )
         return selected_problems
 
     @staticmethod
     def eval_student(category, history):
-        print("before")
         id_10 = random.choice(EVAL_PROBLEMS_10[category])
         id_30 = random.choice(EVAL_PROBLEMS_30[category])
         id_40 = random.choice(EVAL_PROBLEMS_40[category])
         id_60 = random.choice(EVAL_PROBLEMS_60[category])
         id_70 = random.choice(EVAL_PROBLEMS_70[category])
         id_90 = random.choice(EVAL_PROBLEMS_90[category])
-        print("after")
+
         problem_ids = [id_10, id_30, id_40, id_60, id_70, id_90]
         # Retrieve questions using the IDs
         problems = [Question.objects.get(id=id_) for id_ in problem_ids[history:]]

@@ -11,7 +11,6 @@ from .constants import VALID_CATEGORIES
 
 class ProblemSearchView(APIView):
     def get(self, request):
-        print("Try Melowel")
         try:
             count, category, score, history = BackendLogic.validate_params(request)
 
@@ -19,12 +18,10 @@ class ProblemSearchView(APIView):
                 return BackendLogic.invalid_category_response()
 
             if history < 6:
-                print("entering")
                 eval_problems = BackendLogic.eval_student(category, history)
                 if count == 1:
-                    print(type(eval_problems))
                     eval_problems = eval_problems[0]
-                    print(type(eval_problems))
+
                     serializer = QuestionSerializer(eval_problems)
                 else:
                     serializer = QuestionSerializer(eval_problems, many=True)
@@ -47,14 +44,14 @@ class ProblemSearchView(APIView):
 
         except Http404 as e:
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
-        except ValueError:
+        except ValueError as ve:
             return Response(
-                {"error": BackendLogic.ERROR_INVALID_VALUES},
+                {"error": f"ValueError: {str(ve)}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except TypeError:
+        except TypeError as te:
             return Response(
-                {"error": BackendLogic.ERROR_INVALID_PARAMS},
+                {"error": f"TypeError: {str(te)}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
