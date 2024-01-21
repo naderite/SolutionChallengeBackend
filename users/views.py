@@ -29,6 +29,10 @@ class UserScoresAPIView(APIView):
         user_scores = self.get_user_scores(user_id)
         if user_scores:
             category = request.query_params.get("category")
+            if category not in VALID_CATEGORIES:
+                return Response(
+                    {"error": "Invalid category."}, status=status.HTTP_400_BAD_REQUEST
+                )
             return self.get_category_score_response(user_scores, category)
         else:
             return Response(ERROR_USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)

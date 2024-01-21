@@ -11,6 +11,10 @@ class Question(models.Model):
     category = models.CharField(max_length=50)
     difficulty_score = models.PositiveIntegerField()
 
+    class Meta:
+        managed = False
+        db_table = "api_question"
+
     def calculate_answer(self):
         pass
         # Implement the logic to calculate the answer based on the expression
