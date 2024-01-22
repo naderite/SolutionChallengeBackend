@@ -6,4 +6,12 @@ from .models import Question
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = "__all__"
+        fields = [
+            "id",
+            "problem",
+            "rationale",
+            "options",
+            "correct",
+            "category",
+            "difficulty_score",
+        ]

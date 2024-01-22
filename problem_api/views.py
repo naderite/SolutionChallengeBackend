@@ -12,17 +12,17 @@ from .constants import VALID_CATEGORIES
 class ProblemSearchView(APIView):
     def get(self, request):
         try:
-            count, category, score, history = BackendLogic.validate_params(request)
+            count, category, score, new = BackendLogic.validate_params(request)
 
             if category not in VALID_CATEGORIES:
                 return BackendLogic.invalid_category_response()
 
-            if history < 6:
-                eval_problems = BackendLogic.eval_student(category, history)
+            if new == 1:
+                eval_problems = BackendLogic.eval_student(category, new)
                 if count == 1:
-                    eval_problems = eval_problems[0]
-
-                    serializer = QuestionSerializer(eval_problems)
+                    raise ValueError(
+                        "Invalid request: history and count cannot both be 1."
+                    )
                 else:
                     serializer = QuestionSerializer(eval_problems, many=True)
                 return Response(serializer.data)

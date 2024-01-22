@@ -74,14 +74,19 @@ class BackendLogic:
                     selected_problems, category, score, remaining // 2, 1, +1
                 )
                 selected_problems = BackendLogic.fetch_additional_problems(
-                    selected_problems, category, score, remaining // 2, 1, -1
+                    selected_problems,
+                    category,
+                    score,
+                    remaining - remaining // 2,
+                    1,
+                    -1,
                 )
         else:
             selected_problems = BackendLogic.fetch_additional_problems(
                 selected_problems, category, score, count // 2, 1, +1
             )
             selected_problems = BackendLogic.fetch_additional_problems(
-                selected_problems, category, score, count, 1, -1
+                selected_problems, category, score, count // 2, 1, -1
             )
 
         return selected_problems
@@ -93,9 +98,8 @@ class BackendLogic:
         additional_problems = Question.objects.filter(
             category=category, difficulty_score=score + direction * tolerance
         )
-
+        print(target_count)
         tolerance += 1
-
         while additional_problems.count() < target_count:
             additional_problems = additional_problems.union(
                 Question.objects.filter(
@@ -103,10 +107,9 @@ class BackendLogic:
                 )
             )
             tolerance += 1
-
-        selected_problems_ids = list(additional_problems.values_list("id", flat=True))[
-            :target_count
-        ]
+        additional_problems_ids = list(additional_problems.values_list("id", flat=True))
+        if len(additional_problems_ids) > 0:
+            selected_problems_ids = random.sample(additional_problems_ids, target_count)
 
         selected_problems = selected_problems.union(
             Question.objects.filter(id__in=selected_problems_ids)
@@ -124,5 +127,5 @@ class BackendLogic:
 
         problem_ids = [id_10, id_30, id_40, id_60, id_70, id_90]
         # Retrieve questions using the IDs
-        problems = [Question.objects.get(id=id_) for id_ in problem_ids[history:]]
+        problems = [Question.objects.get(id=id_) for id_ in problem_ids]
         return problems
