@@ -27,4 +27,4 @@ class Question(models.Model):
         # return answer
 
     def __str__(self):
-        return self.problem_description
+        return self.problem

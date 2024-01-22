@@ -11,3 +11,6 @@ class UserScores(models.Model):
     geometry = models.IntegerField(default=0)
     physics = models.IntegerField(default=0)
     other = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.uid
