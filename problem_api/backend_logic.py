@@ -27,8 +27,8 @@ class BackendLogic:
         count = int(request.query_params.get("count"))
         category = request.query_params.get("category")
         score = int(request.query_params.get("score"))
-        history = int(request.query_params.get("history"))
-        return count, category, score, history
+        new = int(request.query_params.get("new"))
+        return count, category, score, new
 
     @staticmethod
     def invalid_category_response():

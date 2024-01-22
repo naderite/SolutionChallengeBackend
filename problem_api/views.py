@@ -20,9 +20,7 @@ class ProblemSearchView(APIView):
             if new == 1:
                 eval_problems = BackendLogic.eval_student(category, new)
                 if count == 1:
-                    raise ValueError(
-                        "Invalid request: history and count cannot both be 1."
-                    )
+                    raise ValueError("Invalid request: new and count cannot both be 1.")
                 else:
                     serializer = QuestionSerializer(eval_problems, many=True)
                 return Response(serializer.data)
