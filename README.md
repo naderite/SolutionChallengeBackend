@@ -62,11 +62,11 @@ GET /api/problem-search/?count=1&category=Sample&score=3
 }
 ```
 
-## 2. User Scores API
+## 2. User Scores & History API
 
 ### Overview
 
-The User Scores API manages user scores, providing endpoints for retrieving, creating, and updating user scores based on specific categories.
+The User Scores API manages user scores and history, providing endpoints for retrieving, creating, and updating user scores and history based on specific categories.
 
 ### API Endpoints
 
@@ -130,7 +130,7 @@ Create new user scores by providing data in the request body.
 
 #### 3. Update User Category Score
 
-##### `PATCH /user/scores/update/`
+##### `PATCH /user/scores/`
 
 Update a specific category score for a user by providing the necessary parameters.
 
@@ -140,8 +140,59 @@ Update a specific category score for a user by providing the necessary parameter
 {
   "user_id": "123",
   "category": "gain",
-  "correct_questions": 10,
-  "average_difficulty": 2.5
+  "new_score": 12,
+}
+```
+
+###### Example Response
+
+```json
+{
+  "message": "Category gain updated successfully."
+}
+```
+
+#### 4. Retrieve User History
+
+##### `GET /user/history/`
+
+Retrieve user history based on the specified user ID and optional category parameter.
+
+###### Parameters
+
+- `user_id` (string): The unique identifier for the user.
+- `category` (string, optional): Specific category for which you want to retrieve history.
+
+###### Example Request
+
+```http
+GET /user/history/?user_id=123&category=gain
+```
+
+###### Example Response
+
+```json
+{
+  "gain": 10,
+  "general": 6,
+  "probability": 78,
+  // ... other category scores
+}
+```
+
+#### 5. Update User Category History
+
+##### `PATCH /user/history/`
+
+Update a specific category history for a user by providing the necessary parameters.
+
+###### Request Body
+
+```json
+{
+  "user_id": "123",
+  "category": "gain",
+  "new_history": 12,
 }
 ```
 
