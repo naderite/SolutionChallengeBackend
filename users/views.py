@@ -41,6 +41,24 @@ class UserScoresAPIView(APIView):
         serializer = UserScoresSerializer(data=request.data)
         return self.handle_serializer_response(serializer, status.HTTP_201_CREATED)
 
+    def patch(self, request):
+        (
+            user_id,
+            category,
+            new_score,
+        ) = self.get_patch_parameters(request.data)
+
+        if not user_id or not category or not new_score:
+            return Response(
+                ERROR_INVALID_REQUEST_DATA, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user_scores = self.get_user_scores(user_id)
+        if user_scores:
+            return self.update_category_score(user_scores, category, new_score)
+        else:
+            return Response(ERROR_USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
+
     def get_user_scores(self, user_id):
         try:
             return UserScores.objects.get(uid=user_id)
@@ -62,50 +80,15 @@ class UserScoresAPIView(APIView):
             return Response(serializer.data, status=success_status)
         return Response(ERROR_INVALID_REQUEST_DATA, status=status.HTTP_400_BAD_REQUEST)
 
-
-class UserScoresUpdateAPIView(APIView):
-    def patch(self, request):
-        (
-            user_id,
-            category,
-            correct_questions,
-            average_difficulty,
-        ) = self.get_patch_parameters(request.data)
-
-        if (
-            not user_id
-            or not category
-            or correct_questions is None
-            or average_difficulty is None
-        ):
-            return Response(
-                ERROR_INVALID_REQUEST_DATA, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        user_scores = self.get_user_scores(user_id)
-        if user_scores:
-            return self.update_category_score(
-                user_scores, category, correct_questions, average_difficulty
-            )
-        else:
-            return Response(ERROR_USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
-
     def get_patch_parameters(self, request_data):
         return (
             request_data.get("user_id", None),
             request_data.get("category", None),
-            request_data.get("correct_questions", None),
-            request_data.get("average_difficulty", None),
+            request_data.get("new_score", None),
         )
 
-    def update_category_score(
-        self, user_scores, category, correct_questions, average_difficulty
-    ):
+    def update_category_score(self, user_scores, category, new_score):
         if category in VALID_CATEGORIES:
-            current_score = getattr(user_scores, category)
-            new_score = self.calculate_new_score(
-                current_score, correct_questions, average_difficulty
-            )
             setattr(user_scores, category, new_score)
             user_scores.save()
             return Response(
@@ -117,15 +100,21 @@ class UserScoresUpdateAPIView(APIView):
                 ERROR_INVALID_REQUEST_DATA, status=status.HTTP_400_BAD_REQUEST
             )
 
-    def get_user_scores(self, user_id):
-        try:
-            return UserScores.objects.get(uid=user_id)
-        except UserScores.DoesNotExist:
-            return None
 
-    def calculate_new_score(self, current_score, correct_questions, average_difficulty):
-        # Implement your scoring calculation logic here
-        # This is a placeholder implementation, replace it with your actual logic
-        return float(current_score) + (
-            float(correct_questions) * float(average_difficulty)
-        )
+class UserHistoryAPIView(APIView):
+    def get(self, request):
+        user_id = request.query_params.get("user_id", None)
+
+        if not user_id:
+            return Response(ERROR_MISSING_USER_ID, status=status.HTTP_400_BAD_REQUEST)
+
+        user_scores = self.get_user_scores(user_id)
+        if user_scores:
+            category = request.query_params.get("category")
+            if category not in VALID_CATEGORIES:
+                return Response(
+                    {"error": "Invalid category."}, status=status.HTTP_400_BAD_REQUEST
+                )
+            return self.get_category_score_response(user_scores, category)
+        else:
+            return Response(ERROR_USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)

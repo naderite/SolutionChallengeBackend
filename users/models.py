@@ -12,5 +12,12 @@ class UserScores(models.Model):
     physics = models.IntegerField(default=0)
     other = models.IntegerField(default=0)
 
+    total_gain = models.IntegerField(default=0)
+    total_general = models.IntegerField(default=0)
+    total_probability = models.IntegerField(default=0)
+    total_geometry = models.IntegerField(default=0)
+    total_physics = models.IntegerField(default=0)
+    total_other = models.IntegerField(default=0)
+
     def __str__(self):
         return self.uid
