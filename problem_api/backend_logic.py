@@ -1,4 +1,5 @@
 # backend_logic.py
+from difflib import SequenceMatcher
 import random
 from rest_framework.response import Response
 from rest_framework import status
@@ -59,9 +60,20 @@ class BackendLogic:
         selected_problems = Question.objects.none()
 
         if problems.exists():
-            all_problem_ids = list(problems.values_list("id", flat=True))
+            fetched_problems = [problem for problem in problems]
+            # shuffle problems to randomize deleted ones
+            fetched_problems = random.sample(fetched_problems, len(fetched_problems))
 
-            if problems.count() > 5:
+            # Filter out problems that are too similar
+            for fetched_problem in fetched_problems:
+                should_add_problem = BackendLogic.filter_similar_problems(
+                    fetched_problems, fetched_problem
+                )
+
+                if should_add_problem:
+                    fetched_problems.append(fetched_problem)
+            all_problem_ids = [problem.id for problem in fetched_problems]
+            if len(fetched_problems) > 5:
                 selected_problem_ids = random.sample(
                     all_problem_ids, min(count, len(all_problem_ids))
                 )
@@ -73,11 +85,12 @@ class BackendLogic:
                 selected_problems = BackendLogic.fetch_additional_problems(
                     selected_problems, category, score, remaining // 2, 1, +1
                 )
+                remaining = count - selected_problems.count()
                 selected_problems = BackendLogic.fetch_additional_problems(
                     selected_problems,
                     category,
                     score,
-                    remaining - remaining // 2,
+                    remaining,
                     1,
                     -1,
                 )
@@ -85,8 +98,9 @@ class BackendLogic:
             selected_problems = BackendLogic.fetch_additional_problems(
                 selected_problems, category, score, count // 2, 1, +1
             )
+            remaining = count - selected_problems.count()
             selected_problems = BackendLogic.fetch_additional_problems(
-                selected_problems, category, score, count // 2, 1, -1
+                selected_problems, category, score, remaining, 1, -1
             )
 
         return selected_problems
@@ -95,21 +109,33 @@ class BackendLogic:
     def fetch_additional_problems(
         selected_problems, category, score, target_count, tolerance, direction
     ):
-        additional_problems = Question.objects.filter(
-            category=category, difficulty_score=score + direction * tolerance
-        )
-        print(target_count)
-        tolerance += 1
-        while additional_problems.count() < target_count:
-            additional_problems = additional_problems.union(
-                Question.objects.filter(
-                    category=category, difficulty_score=score + direction * tolerance
-                )
+        additional_problems = []
+
+        while len(additional_problems) < target_count and (
+            100 >= (score + direction * tolerance) >= 0
+        ):
+            # Fetch additional problems
+
+            fetched_problems = Question.objects.filter(
+                category=category, difficulty_score=score + direction * tolerance
             )
+            # shuffle problems to randomize deleted ones
+            fetched_problems = fetched_problems.order_by("?")
+            # Filter out problems that are too similar
+            for fetched_problem in fetched_problems:
+                should_add_problem = BackendLogic.filter_similar_problems(
+                    additional_problems, fetched_problem
+                )
+
+                if should_add_problem:
+                    additional_problems.append(fetched_problem)
             tolerance += 1
-        additional_problems_ids = list(additional_problems.values_list("id", flat=True))
+        additional_problems_ids = [problem.id for problem in additional_problems]
+        selected_problems_ids = []
         if len(additional_problems_ids) > 0:
-            selected_problems_ids = random.sample(additional_problems_ids, target_count)
+            selected_problems_ids = random.sample(
+                additional_problems_ids, min(target_count, len(additional_problems_ids))
+            )
 
         selected_problems = selected_problems.union(
             Question.objects.filter(id__in=selected_problems_ids)
@@ -117,7 +143,26 @@ class BackendLogic:
         return selected_problems
 
     @staticmethod
-    def eval_student(category, history):
+    def are_problems_similar(problem1, problem2):
+        words1 = problem1.split()
+        words2 = problem2.split()
+
+        similarity_ratio = SequenceMatcher(None, words1, words2).ratio()
+
+        return similarity_ratio >= 0.8
+
+    @staticmethod
+    def filter_similar_problems(existing_problems, fetched_problem):
+        for existing_problem in existing_problems:
+            if BackendLogic.are_problems_similar(
+                existing_problem.problem, fetched_problem.problem
+            ):
+                return False
+
+        return True
+
+    @staticmethod
+    def eval_student(category):
         id_10 = random.choice(EVAL_PROBLEMS_10[category])
         id_30 = random.choice(EVAL_PROBLEMS_30[category])
         id_40 = random.choice(EVAL_PROBLEMS_40[category])

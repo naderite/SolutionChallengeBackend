@@ -18,7 +18,7 @@ class ProblemSearchView(APIView):
                 return BackendLogic.invalid_category_response()
 
             if new == 1:
-                eval_problems = BackendLogic.eval_student(category, new)
+                eval_problems = BackendLogic.eval_student(category)
                 if count == 1:
                     raise ValueError("Invalid request: new and count cannot both be 1.")
                 else:
