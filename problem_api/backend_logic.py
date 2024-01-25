@@ -67,7 +67,7 @@ class BackendLogic:
             # Filter out problems that are too similar
             for fetched_problem in fetched_problems:
                 should_add_problem = BackendLogic.filter_similar_problems(
-                    fetched_problems, fetched_problem
+                    fetched_problems, None, fetched_problem
                 )
 
                 if should_add_problem:
@@ -164,11 +164,12 @@ class BackendLogic:
                 existing_problem.problem, fetched_problem.problem
             ):
                 return False
-        for existing_problem in existing_problems2:
-            if BackendLogic.are_problems_similar(
-                existing_problem.problem, fetched_problem.problem
-            ):
-                return False
+        if existing_problems2:
+            for existing_problem in existing_problems2:
+                if BackendLogic.are_problems_similar(
+                    existing_problem.problem, fetched_problem.problem
+                ):
+                    return False
 
         return True
 

@@ -66,3 +66,45 @@ class BackendLogic:
             return Response(
                 ERROR_INVALID_REQUEST_DATA, status=status.HTTP_400_BAD_REQUEST
             )
+
+    @staticmethod
+    def get_user_scores_response(user_id):
+        try:
+            user = UserScores.objects.get(uid=user_id)
+        except UserScores.DoesNotExist:
+            return None
+
+        serializer = UserScoresSerializer(user)
+        scores_data = serializer.data
+
+        response_data = {
+            "gain": scores_data["gain"],
+            "general": scores_data["general"],
+            "probability": scores_data["probability"],
+            "geometry": scores_data["geometry"],
+            "physics": scores_data["physics"],
+            "other": scores_data["other"],
+        }
+
+        return Response(response_data)
+
+    @staticmethod
+    def get_total_history_response(user_id):
+        try:
+            user = UserScores.objects.get(uid=user_id)
+        except UserScores.DoesNotExist:
+            return None
+
+        serializer = UserScoresSerializer(user)
+        scores_data = serializer.data
+
+        total_scores_data = {
+            "total_gain": scores_data["total_gain"],
+            "total_general": scores_data["total_general"],
+            "total_probability": scores_data["total_probability"],
+            "total_geometry": scores_data["total_geometry"],
+            "total_physics": scores_data["total_physics"],
+            "total_other": scores_data["total_other"],
+        }
+
+        return Response(total_scores_data)

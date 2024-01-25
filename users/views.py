@@ -1,9 +1,9 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 
 from .backend_logic import BackendLogic
-
 from .constants import (
     ERROR_INVALID_REQUEST_DATA,
     ERROR_MISSING_USER_ID,
@@ -11,7 +11,6 @@ from .constants import (
     VALID_SCORE_CATEGORIES,
     VALID_HISTORY_CATEGORIES,
 )
-
 from .serializers import UserScoresSerializer
 
 
@@ -19,19 +18,28 @@ class UserScoresAPIView(APIView):
     def get(self, request):
         user_id = request.query_params.get("user_id", None)
 
-        if not user_id:
-            return Response(ERROR_MISSING_USER_ID, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if not user_id:
+                raise ValueError(ERROR_MISSING_USER_ID)
 
-        user_scores = BackendLogic.get_user_scores(user_id)
-        if user_scores:
+            user_scores = BackendLogic.get_user_scores(user_id)
+
+            if not user_scores:
+                raise ValueError(ERROR_USER_NOT_FOUND)
+
             category = request.query_params.get("category")
             if category not in VALID_SCORE_CATEGORIES:
-                return Response(
-                    {"error": "Invalid category."}, status=status.HTTP_400_BAD_REQUEST
-                )
+                raise ValueError("Invalid category.")
+
             return BackendLogic.get_category_score_response(user_scores, category)
-        else:
-            return Response(ERROR_USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
+
+        except ValueError as ve:
+            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def post(self, request):
         serializer = UserScoresSerializer(data=request.data)
@@ -40,58 +48,116 @@ class UserScoresAPIView(APIView):
         )
 
     def patch(self, request):
-        (
-            user_id,
-            category,
-            new_score,
-        ) = BackendLogic.get_score_patch_parameters(request.data)
-
-        if not user_id or not category or not new_score:
-            return Response(
-                ERROR_INVALID_REQUEST_DATA, status=status.HTTP_400_BAD_REQUEST
+        try:
+            user_id, category, new_score = BackendLogic.get_score_patch_parameters(
+                request.data
             )
 
-        user_scores = BackendLogic.get_user_scores(user_id)
-        if user_scores:
+            if not user_id or not category or not new_score:
+                raise ValueError(ERROR_INVALID_REQUEST_DATA)
+
+            user_scores = BackendLogic.get_user_scores(user_id)
+
+            if not user_scores:
+                raise ValueError(ERROR_USER_NOT_FOUND)
+
             return BackendLogic.update_category_score(user_scores, category, new_score)
-        else:
-            return Response(ERROR_USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
+
+        except ValueError as ve:
+            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class UserHistoryAPIView(APIView):
     def get(self, request):
         user_id = request.query_params.get("user_id", None)
 
-        if not user_id:
-            return Response(ERROR_MISSING_USER_ID, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if not user_id:
+                raise ValueError(ERROR_MISSING_USER_ID)
 
-        user_history = BackendLogic.get_user_scores(user_id)
-        if user_history:
+            user_history = BackendLogic.get_user_scores(user_id)
+
+            if not user_history:
+                raise ValueError(ERROR_USER_NOT_FOUND)
+
             category = request.query_params.get("category")
             if category not in VALID_HISTORY_CATEGORIES:
-                return Response(
-                    {"error": "Invalid category."}, status=status.HTTP_400_BAD_REQUEST
-                )
+                raise ValueError("Invalid category.")
+
             return BackendLogic.get_category_score_response(user_history, category)
-        else:
-            return Response(ERROR_USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
 
-    def patch(self, request):
-        (
-            user_id,
-            category,
-            new_history,
-        ) = BackendLogic.get_history_patch_parameters(request.data)
+        except ValueError as ve:
+            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not user_id or not category or not new_history:
+        except Exception as e:
             return Response(
-                ERROR_INVALID_REQUEST_DATA, status=status.HTTP_400_BAD_REQUEST
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        user_history = BackendLogic.get_user_scores(user_id)
-        if user_history:
+    def patch(self, request):
+        try:
+            user_id, category, new_history = BackendLogic.get_history_patch_parameters(
+                request.data
+            )
+
+            if not user_id or not category or not new_history:
+                raise ValueError(ERROR_INVALID_REQUEST_DATA)
+
+            user_history = BackendLogic.get_user_scores(user_id)
+
+            if not user_history:
+                raise ValueError(ERROR_USER_NOT_FOUND)
+
             return BackendLogic.update_category_score(
                 user_history, category, new_history
             )
-        else:
-            return Response(ERROR_USER_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
+
+        except ValueError as ve:
+            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class UserStatsAPIView(APIView):
+    def get(self, request):
+        user_id = request.query_params.get("user_id", None)
+
+        try:
+            if not user_id:
+                raise ValueError(ERROR_MISSING_USER_ID)
+
+            return BackendLogic.get_user_scores_response(user_id)
+
+        except ValueError as ve:
+            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=["get"])
+    def get_history(self, request):
+        user_id = request.query_params.get("user_id", None)
+
+        try:
+            if not user_id:
+                raise ValueError(ERROR_MISSING_USER_ID)
+
+            return BackendLogic.get_user_history_response(user_id)
+
+        except ValueError as ve:
+            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
