@@ -10,6 +10,8 @@ from .constants import (
     ERROR_USER_NOT_FOUND,
     VALID_SCORE_CATEGORIES,
     VALID_HISTORY_CATEGORIES,
+    ERROR_MISSING_DATA_TYPE,
+    ERROR_INVALID_DATA_TYPE,
 )
 from .serializers import UserScoresSerializer
 
@@ -129,31 +131,18 @@ class UserHistoryAPIView(APIView):
 class UserStatsAPIView(APIView):
     def get(self, request):
         user_id = request.query_params.get("user_id", None)
-
+        data = request.query_params.get("type", None)
         try:
             if not user_id:
                 raise ValueError(ERROR_MISSING_USER_ID)
-
-            return BackendLogic.get_user_scores_response(user_id)
-
-        except ValueError as ve:
-            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
-
-        except Exception as e:
-            return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    @action(detail=False, methods=["get"])
-    def get_history(self, request):
-        user_id = request.query_params.get("user_id", None)
-
-        try:
-            if not user_id:
-                raise ValueError(ERROR_MISSING_USER_ID)
-
-            return BackendLogic.get_user_history_response(user_id)
-
+            elif not data:
+                raise ValueError(ERROR_MISSING_DATA_TYPE)
+            if data == "score":
+                return BackendLogic.get_user_scores_response(user_id)
+            elif data == "history":
+                return BackendLogic.get_total_history_response(user_id)
+            else:
+                raise ValueError(ERROR_INVALID_DATA_TYPE)
         except ValueError as ve:
             return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
 

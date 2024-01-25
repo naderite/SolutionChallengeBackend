@@ -63,17 +63,18 @@ class BackendLogic:
             fetched_problems = [problem for problem in problems]
             # shuffle problems to randomize deleted ones
             fetched_problems = random.sample(fetched_problems, len(fetched_problems))
-
             # Filter out problems that are too similar
+            selected_problems = []
+            selected_problems.append(fetched_problems[0])
             for fetched_problem in fetched_problems:
                 should_add_problem = BackendLogic.filter_similar_problems(
                     fetched_problems, None, fetched_problem
                 )
-
                 if should_add_problem:
-                    fetched_problems.append(fetched_problem)
-            all_problem_ids = [problem.id for problem in fetched_problems]
-            if len(fetched_problems) > 5:
+                    selected_problems.append(fetched_problem)
+            all_problem_ids = [problem.id for problem in selected_problems]
+
+            if len(selected_problems) > 5:
                 selected_problem_ids = random.sample(
                     all_problem_ids, min(count, len(all_problem_ids))
                 )
@@ -147,15 +148,6 @@ class BackendLogic:
         return selected_problems
 
     @staticmethod
-    def are_problems_similar(problem1, problem2):
-        words1 = problem1.split()
-        words2 = problem2.split()
-
-        similarity_ratio = SequenceMatcher(None, words1, words2).ratio()
-
-        return similarity_ratio >= 0.8
-
-    @staticmethod
     def filter_similar_problems(
         existing_problems1, existing_problems2, fetched_problem
     ):
@@ -172,6 +164,15 @@ class BackendLogic:
                     return False
 
         return True
+
+    @staticmethod
+    def are_problems_similar(problem1, problem2):
+        words1 = problem1.split()
+        words2 = problem2.split()
+
+        similarity_ratio = SequenceMatcher(None, words1, words2).ratio()
+
+        return similarity_ratio >= 0.8
 
     @staticmethod
     def eval_student(category):
