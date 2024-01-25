@@ -12,8 +12,13 @@ from .constants import VALID_CATEGORIES
 class ProblemSearchView(APIView):
     def get(self, request):
         try:
-            count, category, score, new = BackendLogic.validate_params(request)
-
+            try:
+                count, category, score, new = BackendLogic.validate_params(request)
+            except ValueError and TypeError:
+                return Response(
+                    {"error": "Invalid or missing parameters"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             if category not in VALID_CATEGORIES:
                 return BackendLogic.invalid_category_response()
 

@@ -102,7 +102,12 @@ class BackendLogic:
             selected_problems = BackendLogic.fetch_additional_problems(
                 selected_problems, category, score, remaining, 1, -1
             )
+            if selected_problems.count() < count:
+                remaining = count - selected_problems.count()
 
+                selected_problems = BackendLogic.fetch_additional_problems(
+                    selected_problems, category, score, remaining, 1, +1
+                )
         return selected_problems
 
     @staticmethod
@@ -110,7 +115,6 @@ class BackendLogic:
         selected_problems, category, score, target_count, tolerance, direction
     ):
         additional_problems = []
-
         while len(additional_problems) < target_count and (
             100 >= (score + direction * tolerance) >= 0
         ):
@@ -124,7 +128,7 @@ class BackendLogic:
             # Filter out problems that are too similar
             for fetched_problem in fetched_problems:
                 should_add_problem = BackendLogic.filter_similar_problems(
-                    additional_problems, fetched_problem
+                    selected_problems, additional_problems, fetched_problem
                 )
 
                 if should_add_problem:
@@ -152,8 +156,15 @@ class BackendLogic:
         return similarity_ratio >= 0.8
 
     @staticmethod
-    def filter_similar_problems(existing_problems, fetched_problem):
-        for existing_problem in existing_problems:
+    def filter_similar_problems(
+        existing_problems1, existing_problems2, fetched_problem
+    ):
+        for existing_problem in existing_problems1:
+            if BackendLogic.are_problems_similar(
+                existing_problem.problem, fetched_problem.problem
+            ):
+                return False
+        for existing_problem in existing_problems2:
             if BackendLogic.are_problems_similar(
                 existing_problem.problem, fetched_problem.problem
             ):
