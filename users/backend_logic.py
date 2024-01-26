@@ -54,18 +54,13 @@ class BackendLogic:
         )
 
     @staticmethod
-    def update_category_score(user_scores, category, new_score):
-        if category in VALID_SCORE_CATEGORIES:
-            setattr(user_scores, category, new_score)
-            user_scores.save()
-            return Response(
-                {"message": f"Category {category} updated successfully."},
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(
-                ERROR_INVALID_REQUEST_DATA, status=status.HTTP_400_BAD_REQUEST
-            )
+    def update_category_value(user_scores, category, new_score):
+        setattr(user_scores, category, new_score)
+        user_scores.save()
+        return Response(
+            {"message": f"Category {category} updated successfully."},
+            status=status.HTTP_200_OK,
+        )
 
     @staticmethod
     def get_user_scores_response(user_id):

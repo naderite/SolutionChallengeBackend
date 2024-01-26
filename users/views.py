@@ -62,8 +62,9 @@ class UserScoresAPIView(APIView):
 
             if not user_scores:
                 raise ValueError(ERROR_USER_NOT_FOUND)
-
-            return BackendLogic.update_category_score(user_scores, category, new_score)
+            if category not in VALID_SCORE_CATEGORIES:
+                raise ValueError("Invalid score category.")
+            return BackendLogic.update_category_value(user_scores, category, new_score)
 
         except ValueError as ve:
             return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
@@ -89,7 +90,7 @@ class UserHistoryAPIView(APIView):
 
             category = request.query_params.get("category")
             if category not in VALID_HISTORY_CATEGORIES:
-                raise ValueError("Invalid category.")
+                raise ValueError("Invalid history category.")
 
             return BackendLogic.get_category_score_response(user_history, category)
 
@@ -114,8 +115,9 @@ class UserHistoryAPIView(APIView):
 
             if not user_history:
                 raise ValueError(ERROR_USER_NOT_FOUND)
-
-            return BackendLogic.update_category_score(
+            if category not in VALID_HISTORY_CATEGORIES:
+                raise ValueError("Invalid history category.")
+            return BackendLogic.update_category_value(
                 user_history, category, new_history
             )
 
