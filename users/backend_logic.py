@@ -9,7 +9,6 @@ from rest_framework.views import APIView
 from .constants import (
     ERROR_INVALID_CATEGORY,
     ERROR_INVALID_REQUEST_DATA,
-    VALID_SCORE_CATEGORIES,
 )
 
 
@@ -54,9 +53,9 @@ class BackendLogic:
         )
 
     @staticmethod
-    def update_category_value(user_scores, category, new_score):
-        setattr(user_scores, category, new_score)
-        user_scores.save()
+    def update_category_value(user, category, new_score):
+        setattr(user, category, new_score)
+        user.save()
         return Response(
             {"message": f"Category {category} updated successfully."},
             status=status.HTTP_200_OK,
@@ -88,6 +87,8 @@ class BackendLogic:
         try:
             user = UserScores.objects.get(uid=user_id)
         except UserScores.DoesNotExist:
+            print("user not found!")
+
             return None
 
         serializer = UserScoresSerializer(user)
@@ -103,3 +104,32 @@ class BackendLogic:
         }
 
         return Response(total_scores_data)
+
+    @staticmethod
+    def get_favorites(user_id):
+        try:
+            user = UserScores.objects.get(uid=user_id)
+        except UserScores.DoesNotExist:
+            print("user not found!")
+            return None
+        problem_ids = user.get_favorites()
+        sets_list = BackendLogic.create_ids_sublist(problem_ids)
+
+        return Response(sets_list)
+
+    @staticmethod
+    def create_ids_sublist(ids_list):
+
+        sublists = []
+        temp_list = []
+
+        for item in ids_list:
+            if item != "#":
+                temp_list.append(item)
+            else:
+                if temp_list:  # Check if temp_list is not empty before appending
+                    sublists.append(temp_list)
+                    temp_list = []
+        if temp_list:
+            sublists.append(temp_list)
+        return sublists

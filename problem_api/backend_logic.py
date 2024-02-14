@@ -187,3 +187,8 @@ class BackendLogic:
         # Retrieve questions using the IDs
         problems = [Question.objects.get(id=id_) for id_ in problem_ids]
         return problems
+
+    @staticmethod
+    def filter_problems_by_ids(problem_ids):
+        problems = [Question.objects.get(id=id_) for id_ in problem_ids]
+        return problems

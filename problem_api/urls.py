@@ -1,6 +1,11 @@
 from django.urls import path
-from .views import ProblemSearchView
+from . import views
 
 urlpatterns = [
-    path("problem-search/", ProblemSearchView.as_view(), name="problem-search-view"),
+    path(
+        "get-problems-by-score/",
+        views.get_problems_by_score,
+        name="get_problems_by_score",
+    ),
+    path("get-problems-by-id/", views.get_problems_by_id, name="get_problems_by_id"),
 ]

@@ -19,5 +19,20 @@ class UserScores(models.Model):
     total_physics = models.IntegerField(default=0)
     total_other = models.IntegerField(default=0)
 
+    favorites = models.CharField(max_length=255, default="")
+    recent = models.CharField(max_length=255, default="")
+
+    def get_favorites(self):
+        return self.favorites.split(",")
+
+    def get_recent(self):
+        return self.recent.split(",")
+
+    def set_favorites(self, pid):
+        self.favorites = ",".join(pid)
+
+    def set_recent(self, pid):
+        self.recent = ",".join(pid)
+
     def __str__(self):
         return self.uid

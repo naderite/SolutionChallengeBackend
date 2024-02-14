@@ -15,11 +15,15 @@ from .constants import (
 )
 from .serializers import UserScoresSerializer
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class UserScoresAPIView(APIView):
     def get(self, request):
+        logger.info("in get")
         user_id = request.query_params.get("user_id", None)
-
         try:
             if not user_id:
                 raise ValueError(ERROR_MISSING_USER_ID)
@@ -36,14 +40,18 @@ class UserScoresAPIView(APIView):
             return BackendLogic.get_category_score_response(user_scores, category)
 
         except ValueError as ve:
+            logger.error(str(ve))
             return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
+            logger.error(str(e))
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     def post(self, request):
+        logger.info("adding user")
+
         serializer = UserScoresSerializer(data=request.data)
         return BackendLogic.handle_serializer_response(
             serializer, status.HTTP_201_CREATED
@@ -51,6 +59,7 @@ class UserScoresAPIView(APIView):
 
     def patch(self, request):
         try:
+            logger.info("in patch")
             user_id, category, new_score = BackendLogic.get_score_patch_parameters(
                 request.data
             )
@@ -67,9 +76,11 @@ class UserScoresAPIView(APIView):
             return BackendLogic.update_category_value(user_scores, category, new_score)
 
         except ValueError as ve:
+            logger.error(str(ve))
             return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
+            logger.error(str(e))
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -95,9 +106,11 @@ class UserHistoryAPIView(APIView):
             return BackendLogic.get_category_score_response(user_history, category)
 
         except ValueError as ve:
+            logger.error(str(ve))
             return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
+            logger.error(str(e))
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -122,9 +135,11 @@ class UserHistoryAPIView(APIView):
             )
 
         except ValueError as ve:
+            logger.error(str(ve))
             return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
+            logger.error(str(e))
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -143,12 +158,30 @@ class UserStatsAPIView(APIView):
                 return BackendLogic.get_user_scores_response(user_id)
             elif data == "history":
                 return BackendLogic.get_total_history_response(user_id)
+            elif data == "favorites":
+                return BackendLogic.get_favorites(user_id)
+            elif data == "recent":
+                return BackendLogic.get_recent(user_id)
             else:
-                raise ValueError(ERROR_INVALID_DATA_TYPE)
+                # Log the unexpected data value
+                logger.warning("Unexpected data value: %s", data)
+                return Response(
+                    {"error": ERROR_INVALID_DATA_TYPE},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except ValueError as ve:
+            # Log the ValueError
+            logger.error(str(ve))
             return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
+            # Log other exceptions
+            logger.exception("An unexpected error occurred")
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "An unexpected error occurred"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+            # Add a default response in case none of the conditions above are met
+        return Response(
+            {"error": ERROR_INVALID_DATA_TYPE}, status=status.HTTP_400_BAD_REQUEST
+        )
