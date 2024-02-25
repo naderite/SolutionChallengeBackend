@@ -9,19 +9,18 @@
        - [Parameters](#parameters)
        - [Example Request](#example-request)
        - [Example Response](#example-response)
-2. [User Scores API](#2-user-scores-api)
+2. [User Scores & History API](#2-user-scores--history-api)
    - [Overview](#overview-1)
    - [API Endpoints](#api-endpoints-1)
-     - [1. Retrieve User Scores](#1-retrieve-user-scores)
-       - [Parameters](#parameters-1)
-       - [Example Request](#example-request-1)
-       - [Example Response](#example-response-1)
-     - [2. Create User Scores](#2-create-user-scores)
-       - [Request Body](#request-body)
-       - [Example Response](#example-response-2)
-     - [3. Update User Category Score](#3-update-user-category-score)
-       - [Request Body](#request-body-1)
-       - [Example Response](#example-response-3)
+     - [1. User Scores](#1-user-scores)
+       - [GET /user/scores/](#get-userscores)
+       - [POST /user/scores/](#post-userscores)
+       - [PATCH /user/scores/](#patch-userscores)
+     - [2. User History](#2-user-history)
+       - [GET /user/history/](#get-userhistory)
+       - [PATCH /user/history/](#patch-userhistory)
+     - [3. User Stats](#3-user-stats)
+       - [GET /user/stats/](#get-userstats)
    - [How to Use](#how-to-use)
      - [Setting Up Locally](#setting-up-locally)
      - [Running the Django API](#running-the-django-api)
@@ -30,7 +29,7 @@
 
 ### Overview
 
-The Problem Search API is designed to facilitate problem retrieval based on specific criteria such as category and difficulty score.
+The Problem Search API facilitates problem retrieval based on specific criteria such as category and difficulty score.
 
 ### API Endpoints
 
@@ -66,11 +65,11 @@ GET /api/problem-search/?count=1&category=Sample&score=3
 
 ### Overview
 
-The User Scores API manages user scores and history, providing endpoints for retrieving, creating, and updating user scores and history based on specific categories.
+The User Scores & History API manages user scores and history, providing endpoints for retrieving, creating, and updating user scores and history based on specific categories.
 
 ### API Endpoints
 
-#### 1. Retrieve User Scores
+#### 1. User Scores
 
 ##### `GET /user/scores/`
 
@@ -97,8 +96,6 @@ GET /user/scores/?user_id=123&category=gain
   // ... other category scores
 }
 ```
-
-#### 2. Create User Scores
 
 ##### `POST /user/scores/`
 
@@ -128,8 +125,6 @@ Create new user scores by providing data in the request body.
 }
 ```
 
-#### 3. Update User Category Score
-
 ##### `PATCH /user/scores/`
 
 Update a specific category score for a user by providing the necessary parameters.
@@ -152,7 +147,7 @@ Update a specific category score for a user by providing the necessary parameter
 }
 ```
 
-#### 4. Retrieve User History
+#### 2. User History
 
 ##### `GET /user/history/`
 
@@ -180,8 +175,6 @@ GET /user/history/?user_id=123&category=gain
 }
 ```
 
-#### 5. Update User Category History
-
 ##### `PATCH /user/history/`
 
 Update a specific category history for a user by providing the necessary parameters.
@@ -204,6 +197,27 @@ Update a specific category history for a user by providing the necessary paramet
 }
 ```
 
+#### 3. User Stats
+
+##### `GET /user/stats/`
+
+Retrieve various statistics for a user based on the specified user ID and data type.
+
+###### Parameters
+
+- `user_id` (string): The unique identifier for the user.
+- `type` (string): Type of statistics to retrieve (`score`, `history`, `favorites`, `recent`).
+
+###### Example Request
+
+```http
+GET /user/stats/?user_id=123&type=score
+```
+
+###### Example Response
+
+Returns statistics based on the specified type.
+
 ### How to Use
 
 Integrate these API endpoints into your application to manage and track user scores dynamically. Retrieve existing scores, add new scores, and update category scores based on user interactions. Follow the steps outlined in each API section for a smooth integration process.
@@ -224,17 +238,16 @@ Follow these steps to set up the Django API locally:
    cd SolutionChallengeBackend
    ```
 
-3. Install dependencies:
+3. Create a virtual environment if you don't already have one named "venv".
+
+4. Install dependencies:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-#### Running the Django API
+#### Running the API
 
-Run the development server:
+Run the file `./start_env.bat` to start the servers.
 
-   ```bash
-   python manage.py runserver
-   ```
-
+Copy the Django API tunnel link (forwarded to localhost:8000) and paste it in the `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` in the Django project `settings.py`.

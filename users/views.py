@@ -50,8 +50,7 @@ class UserScoresAPIView(APIView):
             )
 
     def post(self, request):
-        logger.info("adding user")
-
+        logger.error(str(request.data))
         serializer = UserScoresSerializer(data=request.data)
         return BackendLogic.handle_serializer_response(
             serializer, status.HTTP_201_CREATED
@@ -181,7 +180,3 @@ class UserStatsAPIView(APIView):
                 {"error": "An unexpected error occurred"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-            # Add a default response in case none of the conditions above are met
-        return Response(
-            {"error": ERROR_INVALID_DATA_TYPE}, status=status.HTTP_400_BAD_REQUEST
-        )
